@@ -1,20 +1,415 @@
-﻿<!DOCTYPE html>
-<html>
+<!doctype html>
+<!--
+  HTML_HERO — односторінковий квест для абітурієнтів.
+  Файл зроблений як один цільний HTML документ (CSS + JS inline).
+  Авторський стиль: геймерський неон, дружній текст, підказки та перевірка введеного коду.
+
+  Інструкція: збережіть цей файл як HTML і відкрийте в браузері.
+-->
+<html lang="uk">
 <head>
-    <meta charset="UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>HTML HERO — квест</title>
+  <style>
+    /* --- СТИЛЬ: геймерський неон --- */
+    :root{
+      --bg:#0b0f16; --card:#0f1720; --neon:#2ee6ff; --accent:#9b59ff; --muted:#93a1b0;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter, system-ui, Arial, sans-serif;background:linear-gradient(180deg,#021124 0%, #071927 60%);color:#e6f0f6;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px}
+    .wrap{width:100%;max-width:980px}
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    .logo{width:72px;height:72px;border-radius:12px;background:linear-gradient(135deg,var(--neon),var(--accent));display:flex;align-items:center;justify-content:center;box-shadow:0 6px 30px rgba(0,0,0,.6);font-weight:700;color:#021124}
+    h1{font-size:20px;margin:0}
+    p.lead{margin:0;color:var(--muted)}
+
+    .game{display:grid;grid-template-columns:360px 1fr;gap:20px}
+    .panel{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border:1px solid rgba(46,230,255,0.06);padding:16px;border-radius:12px;box-shadow:0 8px 40px rgba(7,17,28,.6)}
+
+    /* left column */
+    .sidebar{padding:18px}
+    .progress{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .levelChip{padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03);cursor:default}
+    .levelChip.locked{opacity:.45}
+
+    .hint{background:rgba(255,255,255,0.02);padding:12px;border-radius:10px;margin-bottom:12px;color:var(--muted);font-size:14px}
+    .goal{background:linear-gradient(90deg,rgba(155,89,255,0.08),rgba(46,230,255,0.04));padding:12px;border-radius:10px;margin-bottom:12px}
+    .btn{display:inline-block;padding:10px 14px;border-radius:10px;border:none;background:linear-gradient(90deg,var(--neon),var(--accent));color:#021124;font-weight:700;cursor:pointer;box-shadow:0 8px 18px rgba(155,89,255,0.08)}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--neon)}
+
+    /* editor */
+    .editorWrap{display:flex;flex-direction:column;height:560px}
+    .editorHeader{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    textarea.editor{flex:1;width:100%;resize:none;background:#021826;border:1px solid rgba(255,255,255,0.03);color:#dff6ff;padding:14px;border-radius:10px;font-family:Consolas,monospace;font-size:13px;line-height:1.5}
+    .console{height:110px;overflow:auto;background:#06121a;border-radius:8px;padding:10px;margin-top:10px;border:1px solid rgba(255,255,255,0.03);font-family:monospace;color:#bfefff}
+
+    /* success */
+    .success{background:linear-gradient(90deg,#072b14 0%,#09362a 100%);border:1px solid rgba(46,230,255,0.06);padding:14px;border-radius:10px;color:#b7ffd6}
+
+    footer{margin-top:12px;color:var(--muted);font-size:13px}
+
+    /* responsive */
+    @media (max-width:880px){.game{grid-template-columns:1fr;}.editorWrap{height:420px}}
+  </style>
 </head>
 <body>
-    <p>Вітаємо на нашій сторінці!</p>
-    Це має бути головний заголовок
+  <div class="wrap">
+    <header>
+      <div class="logo">H</div>
+      <div>
+        <h1>HTML HERO — квест для абітурієнтів</h1>
+        <p class="lead">Виріши 5 рівнів HTML — виправ код, відкрий секрети і отримай бейдж героя.</p>
+      </div>
+    </header>
 
-    <img src="imag.jpg" alt="Зображення">
+    <div class="game">
+      <!-- LEFT: інструкції та прогрес -->
+      <aside class="panel sidebar">
+        <div class="progress" id="progress"></div>
 
-    Це звичайний текст, але він має бути у параграфі!
+        <div class="goal">
+          <strong>Мета:</strong>
+          <div>На кожному рівні виправ/допиши HTML. Кнопка <em>Перевірити</em> активує перевірку. Пройди всі рівні, щоб отримати фінальний бейдж.</div>
+        </div>
 
-    <a href="wrong.com">Клікніть тут</a>
+        <div class="hint" id="hintBox">Оберіть рівень або почніть з 1 — підказки будуть тут.</div>
 
-    <p>Цей текст має бути жирним. </p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn" id="resetBtn">Скинути прогрес</button>
+          <button class="btn secondary" id="showSolution">Показати річну підказку</button>
+        </div>
 
-    <p>І цей текст має бути курсивом.</p>
+        <div style="margin-top:12px">
+          <small style="color:var(--muted)">Порада: працює автономно — збережи як .html і відкрий у браузері.</small>
+        </div>
+      </aside>
+
+      <!-- RIGHT: редактор і перевірка -->
+      <main class="panel">
+        <div class="editorWrap">
+          <div class="editorHeader">
+            <div>
+              <strong id="levelTitle">Рівень 1: Заголовок зник</strong>
+              <div style="font-size:13px;color:var(--muted)" id="levelDesc">Додай тег, щоб на сторінці з’явився великий заголовок "HTML HERO".</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div id="statusBadge" class="levelChip">Почати</div>
+              <button class="btn" id="checkBtn">Перевірити</button>
+            </div>
+          </div>
+
+          <textarea id="codeArea" class="editor" spellcheck="false">&lt;!-- Введи тут свій HTML-код для рівня 1. Наприклад: --&gt;
+&lt;h1&gt;HTML HERO&lt;/h1&gt;</textarea>
+
+          <div class="console" id="console">Консоль: привіт, герой! Клікни «Перевірити», щоб виконати перевірку.</div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;justify-content:space-between">
+          <div id="finalArea"></div>
+          <div>
+            <button class="btn secondary" id="prevLevel">Попередній</button>
+            <button class="btn secondary" id="nextLevel">Наступний</button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <footer>
+      <small>Створено як навчальний квест — можеш редагувати рівні та завдання. Удачі!</small>
+    </footer>
+  </div>
+
+  <script>
+    /***** Ніжні людські коментарі від автора коду *******/
+    // Я — твій дружній помічник-сценарист. Тут зібрано 5 рівнів та логіка перевірки.
+
+    // ---- Дані рівнів: завдання, підказки, початковий код і перевірка ----
+    const levels = [
+      {
+        id:1,
+        title:'Рівень 1: Заголовок зник',
+        desc:'Додай тег, щоб на сторінці зʼявився великий заголовок "HTML HERO".',
+        starter:'<!-- Введи тут свій HTML-код для рівня 1. Наприклад: -->\n<h1>HTML HERO</h1>',
+        hint:'Використай тег <h1> з текстом HTML HERO.',
+        validator: (doc)=>{
+          const h = doc.querySelector('h1');
+          if(!h) return {ok:false, msg:'Тег <h1> не знайдено.'};
+          if(h.textContent.trim().toUpperCase() !== 'HTML HERO') return {ok:false, msg:'Заголовок має точно містити текст "HTML HERO".'};
+          return {ok:true};
+        }
+      },
+
+      {
+        id:2,
+        title:'Рівень 2: Загублене зображення',
+        desc:'Встав зображення логотипу. В атрибуті alt має бути слово "HTML".',
+        starter:'<!-- Спробуй: -->\n<img src="https://via.placeholder.com/180x80?text=HTML" alt="HTML логотип">',
+        hint:'Тег <img> повинен мати атрибути src і alt. Alt має містити "HTML".',
+        validator: (doc)=>{
+          const img = doc.querySelector('img');
+          if(!img) return {ok:false, msg:'Тег <img> не знайдено.'};
+          if(!img.getAttribute('src')) return {ok:false, msg:'Атрибут src пустий.'};
+          const alt = img.getAttribute('alt')||'';
+          if(!/html/i.test(alt)) return {ok:false, msg:'Атрибут alt має містити слово HTML.'};
+          return {ok:true};
+        }
+      },
+
+      {
+        id:3,
+        title:'Рівень 3: Зіпсане посилання',
+        desc:'Створи посилання, яке виглядає як кнопка і має текст "Продовжити". Воно має містити href або data-next.',
+        starter:'<!-- Приклад: -->\n<a href="#" class="btn">Продовжити</a>',
+        hint:'Використай тег <a> з текстом "Продовжити". href або data-next — для перевірки.',
+        validator: (doc)=>{
+          const a = Array.from(doc.querySelectorAll('a')).find(x=>x.textContent.trim().toLowerCase()==='продовжити');
+          if(!a) return {ok:false, msg:'Посилання з текстом "Продовжити" не знайдено.'};
+          if(!a.getAttribute('href') && !a.getAttribute('data-next')) return {ok:false, msg:'Додай href або data-next в тег <a>.'};
+          return {ok:true};
+        }
+      },
+
+      {
+        id:4,
+        title:'Рівень 4: Список інструментів',
+        desc:'Створи ненумерований список з 3 елементів (ul > li).',
+        starter:'<!-- Наприклад: -->\n<ul>\n  <li>HTML</li>\n  <li>CSS</li>\n  <li>JavaScript</li>\n</ul>',
+        hint:'Використай <ul> з трьома <li>.',
+        validator: (doc)=>{
+          const ul = doc.querySelector('ul');
+          if(!ul) return {ok:false, msg:'Тег <ul> не знайдено.'};
+          const lis = ul.querySelectorAll('li');
+          if(lis.length < 3) return {ok:false, msg:'Потрібно щонайменше 3 елементи <li>.'};
+          return {ok:true};
+        }
+      },
+
+      {
+        id:5,
+        title:'Фінал: Повна сторінка',
+        desc:'Склади мінімально повну HTML-сторінку з &lt;!doctype&gt;, &lt;html&gt;, &lt;head&gt; з &lt;title&gt; "HTML HERO" і &lt;body&gt; з будь-яким контентом.',
+        starter:'<!doctype html>\n<html lang="uk">\n<head>\n  <meta charset="utf-8">\n  <title>HTML HERO</title>\n</head>\n<body>\n  <h1>HTML HERO</h1>\n  <p>Фінальна сторінка</p>\n</body>\n</html>',
+        hint:'Переконайся, що є <!doctype html>, теги html, head та title з текстом HTML HERO.',
+        validator: (doc, raw)=>{
+          // raw — сирий текст введення (щоб шукати <!doctype)
+          if(!/^\s*<!doctype html>/i.test(raw)) return {ok:false, msg:'Потрібно вказати <!doctype html> на початку.'};
+          if(!doc.documentElement) return {ok:false, msg:'Тег <html> не знайдено.'};
+          const title = doc.querySelector('title');
+          if(!title || !/html hero/i.test(title.textContent)) return {ok:false, msg:'Треба <title> з текстом "HTML HERO".'};
+          return {ok:true};
+        }
+      }
+    ];
+
+    // ---- Стан гри ----
+    let currentLevel = 1;
+    const progressState = {}; // {1:true,2:false...}
+
+    // ---- DOM елементи ----
+    const codeArea = document.getElementById('codeArea');
+    const checkBtn = document.getElementById('checkBtn');
+    const consoleBox = document.getElementById('console');
+    const levelTitle = document.getElementById('levelTitle');
+    const levelDesc = document.getElementById('levelDesc');
+    const statusBadge = document.getElementById('statusBadge');
+    const progressWrap = document.getElementById('progress');
+    const hintBox = document.getElementById('hintBox');
+    const prevLevelBtn = document.getElementById('prevLevel');
+    const nextLevelBtn = document.getElementById('nextLevel');
+    const resetBtn = document.getElementById('resetBtn');
+    const showSolutionBtn = document.getElementById('showSolution');
+    const finalArea = document.getElementById('finalArea');
+
+    // ---- Ініціалізація UI ----
+    function init(){
+      // створюємо чіпи прогресу
+      progressWrap.innerHTML = '';
+      for(const lv of levels){
+        const el = document.createElement('div');
+        el.className = 'levelChip locked';
+        el.textContent = `Рівень ${lv.id}`;
+        el.dataset.level = lv.id;
+        el.style.cursor = 'pointer';
+        el.addEventListener('click', ()=>{
+          // можна клікнути лише якщо розблоковано
+          if(progressState[lv.id-1] || lv.id===1 || progressState[lv.id]){
+            // allow open when previous completed or it's first
+            openLevel(lv.id);
+          } else {
+            // заблокований — невелика підказка
+            flashConsole('Цей рівень поки що заблоковано. Завершіть попередні.');
+          }
+        });
+        progressWrap.appendChild(el);
+      }
+
+      // завантажити стан з localStorage при наявності
+      const saved = localStorage.getItem('htmlHeroProgress');
+      if(saved){
+        try{Object.assign(progressState, JSON.parse(saved));}catch(e){}
+      }
+
+      // відкриваємо початковий рівень
+      openLevel(currentLevel);
+      refreshProgressUI();
+    }
+
+    function saveProgress(){
+      localStorage.setItem('htmlHeroProgress', JSON.stringify(progressState));
+    }
+
+    function refreshProgressUI(){
+      for(const chip of progressWrap.children){
+        const lv = Number(chip.dataset.level);
+        if(progressState[lv]){
+          chip.classList.remove('locked');
+          chip.style.background = 'linear-gradient(90deg,var(--neon),var(--accent))';
+          chip.style.color = '#021124';
+        } else {
+          chip.classList.add('locked');
+          chip.style.background = '';
+          chip.style.color = '';
+        }
+      }
+    }
+
+    function openLevel(levelNum){
+      currentLevel = levelNum;
+      const cfg = levels.find(l=>l.id===levelNum);
+      levelTitle.textContent = cfg.title;
+      levelDesc.textContent = cfg.desc;
+      codeArea.value = cfg.starter;
+      statusBadge.textContent = progressState[levelNum] ? 'Пройдено' : 'В роботі';
+      hintBox.textContent = cfg.hint;
+      consoleBox.textContent = 'Консоль: готово до перевірки.';
+      finalArea.innerHTML = '';
+      updateNavButtons();
+    }
+
+    function updateNavButtons(){
+      prevLevelBtn.disabled = currentLevel === 1;
+      nextLevelBtn.disabled = currentLevel === levels.length || !progressState[currentLevel];
+    }
+
+    function flashConsole(msg){
+      consoleBox.textContent = 'Консоль: ' + msg;
+      consoleBox.style.transition = 'none';
+      consoleBox.style.transform = 'translateY(-2px)';
+      setTimeout(()=>{consoleBox.style.transform='translateY(0)';},120);
+    }
+
+    function runValidation(){
+      const cfg = levels.find(l=>l.id===currentLevel);
+      const userCode = codeArea.value;
+
+      // Парсимо введений HTML як документ. Використаємо DOMParser.
+      let parser = new DOMParser();
+      let doc;
+      try{
+        doc = parser.parseFromString(userCode, 'text/html');
+      }catch(e){
+        flashConsole('Не вдалося розпарсити код. Перевірте синтаксис.');
+        return;
+      }
+
+      // викликаємо валідатор
+      const result = cfg.validator(doc, userCode);
+      if(result.ok){
+        // успіх
+        progressState[currentLevel] = true;
+        saveProgress();
+        refreshProgressUI();
+        statusBadge.textContent = 'Пройдено';
+        flashConsole('Вітаю! Рівень пройдено.');
+        // відкриваємо наступний рівень автоматично, якщо є
+        if(currentLevel < levels.length){
+          // показуємо кнопку "перейти"
+          finalArea.innerHTML = `<div class="success">Рівень ${currentLevel} пройдений ✅ — <button class="btn" id="gotoNext">Перейти до рівня ${currentLevel+1}</button></div>`;
+          document.getElementById('gotoNext').addEventListener('click', ()=>{ openLevel(currentLevel+1); });
+        } else {
+          finalArea.innerHTML = `<div class="success">Вітаємо — ти завершив квест! 🎉<div style="margin-top:8px">Натисни кнопку, щоб згенерувати бейдж героя.</div><div style="margin-top:8px"><button class="btn" id="badgeBtn">Отримати бейдж</button></div></div>`;
+          document.getElementById('badgeBtn').addEventListener('click', generateBadge);
+        }
+        updateNavButtons();
+      } else {
+        // помилка — показати корисне повідомлення
+        flashConsole(result.msg || 'Перевірка не пройдена. Подивись підказку.');
+      }
+    }
+
+    function generateBadge(){
+      // Простий SVG бейдж — користувач може скопіювати або зберегти
+      const svg = `data:image/svg+xml;utf8,` + encodeURIComponent(`
+        <svg xmlns='http://www.w3.org/2000/svg' width='600' height='200'>
+          <defs>
+            <linearGradient id='g' x1='0' x2='1'>
+              <stop offset='0' stop-color='#2ee6ff'/>
+              <stop offset='1' stop-color='#9b59ff'/>
+            </linearGradient>
+          </defs>
+          <rect rx='20' width='100%' height='100%' fill='#021124' />
+          <rect rx='16' x='10' y='10' width='580' height='180' fill='url(#g)' opacity='0.08' />
+          <text x='50%' y='55' font-size='28' font-family='Arial' text-anchor='middle' fill='#bffcff'>HTML HERO</text>
+          <text x='50%' y='105' font-size='18' font-family='Arial' text-anchor='middle' fill='#e6f0f6'>Квест пройдений</text>
+          <text x='50%' y='145' font-size='14' font-family='Arial' text-anchor='middle' fill='#bfefff'>Дата: ${new Date().toLocaleDateString()}</text>
+        </svg>
+      `);
+      const img = document.createElement('img');
+      img.src = svg;
+      img.alt = 'Badge';
+      img.style.maxWidth = '100%';
+      finalArea.innerHTML = '';
+      finalArea.appendChild(img);
+      const dl = document.createElement('a');
+      dl.href = svg;
+      dl.download = 'HTML_HERO_badge.svg';
+      dl.textContent = 'Завантажити бейдж';
+      dl.className = 'btn';
+      dl.style.display = 'inline-block';
+      dl.style.marginTop = '8px';
+      finalArea.appendChild(dl);
+    }
+
+    // ---- Події UI ----
+    checkBtn.addEventListener('click', ()=>{ runValidation(); });
+    prevLevelBtn.addEventListener('click', ()=>{ if(currentLevel>1) openLevel(currentLevel-1); });
+    nextLevelBtn.addEventListener('click', ()=>{ if(currentLevel<levels.length) openLevel(currentLevel+1); });
+    resetBtn.addEventListener('click', ()=>{
+      if(confirm('Скинути прогрес?')){
+        for(const k in progressState) delete progressState[k];
+        saveProgress();
+        refreshProgressUI();
+        openLevel(1);
+        flashConsole('Прогрес скинуто. Починаємо знову.');
+      }
+    });
+
+    showSolutionBtn.addEventListener('click', ()=>{
+      const cfg = levels.find(l=>l.id===currentLevel);
+      if(confirm('Показати рішення для цього рівня?')){
+        codeArea.value = cfg.starter;
+        flashConsole('Рішення вставлено у редактор. Спробуй його або внеси зміни.');
+      }
+    });
+
+    // корисна підказка: тости після збереження
+    window.addEventListener('beforeunload', ()=>{ saveProgress(); });
+
+    // ініціалізація при завантаженні
+    init();
+
+    // невеликі стилістичні штрихи: клавіатурні скорочення
+    document.addEventListener('keydown', (e)=>{
+      if(e.ctrlKey && e.key.toLowerCase()==='s'){ e.preventDefault(); saveProgress(); flashConsole('Прогрес збережено.'); }
+      if(e.ctrlKey && e.key.toLowerCase()==='Enter'){ e.preventDefault(); runValidation(); }
+    });
+
+    // Додатково: короткий наочний приклад перевірки у консолі
+    function debugLog(...a){ console.log('[HTML_HERO]',...a); }
+
+  </script>
 </body>
 </html>
+
+
